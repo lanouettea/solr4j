@@ -1,0 +1,9 @@
+Solr4J NOTICE
+
+Copyright (C) 2017 -
+
+Some JARs from the Solr4J project (but not the solr4j-core.jar),
+include Solr binaries, which are covered by the  Apache License Version 2.0.
+
+Here is a link allowing you to access Solr4J's source code:
+https://github.com/lanouettea/solr4j

@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    
+    <parent>
+        <groupId>com.andrelanouette.solr4j</groupId>
+        <artifactId>solr4j-pom</artifactId>
+        <version>1.0.0-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>solr4j-distrib</artifactId>
+    <version>6.6.0-SNAPSHOT</version>
+
+    <properties>
+        <solr.version>6.6.0</solr.version>
+        <solr.checksum>ff41310a86a0ffa00a8c8f17c65eb457</solr.checksum>
+    </properties>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>com.googlecode.maven-download-plugin</groupId>
+                <artifactId>download-maven-plugin</artifactId>
+                <version>1.3.0</version>
+                <executions>
+                    <execution>
+                        <id>extract-solr-distribution</id>
+                        <phase>prepare-package</phase>
+                        <goals>
+                            <goal>wget</goal>
+                        </goals>
+                        <configuration>
+                            <url>http://apache.forsale.plus/lucene/solr/${solr.version}/solr-${solr.version}.zip</url>
+                            <unpack>true</unpack>
+                            <outputDirectory>${project.build.directory}/classes/com/andrelanouette/solr4j/distrib/</outputDirectory>
+                            <md5>${solr.checksum}</md5>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <configuration>
+                    <excludes>
+                        <exclude>com/andrelanouette/solr4j/distrib/solr-${solr.version}/example/**</exclude>
+                        <exclude>com/andrelanouette/solr4j/distrib/solr-${solr.version}/example</exclude>
+                    </excludes>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>
