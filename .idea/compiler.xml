@@ -6,12 +6,14 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
+        <module name="solr4j-all" />
         <module name="solr4j-core" />
         <module name="solr4j-demo" />
         <module name="solr4j-distrib" />
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
+      <module name="solr4j-all" target="1.6" />
       <module name="solr4j-core" target="1.6" />
       <module name="solr4j-demo" target="1.6" />
       <module name="solr4j-distrib" target="1.6" />

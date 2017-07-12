@@ -11,7 +11,7 @@
     </parent>
 
     <artifactId>solr4j-distrib</artifactId>
-    <version>6.6.0-SNAPSHOT</version>
+    <version>6.6.0</version>
 
     <properties>
         <solr.version>6.6.0</solr.version>
@@ -34,16 +34,47 @@
                         <configuration>
                             <url>http://apache.forsale.plus/lucene/solr/${solr.version}/solr-${solr.version}.zip</url>
                             <unpack>true</unpack>
-                            <outputDirectory>${project.build.directory}/classes/com/andrelanouette/solr4j/distrib/</outputDirectory>
+                            <outputDirectory>${project.build.directory}/classes/com/andrelanouette/solr4j/distrib/
+                            </outputDirectory>
                             <md5>${solr.checksum}</md5>
                         </configuration>
                     </execution>
                 </executions>
             </plugin>
             <plugin>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-bundle-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>bundle-manifest</id>
+                        <phase>process-classes</phase>
+                        <goals>
+                            <goal>manifest</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <supportedProjectTypes>
+                        <supportedProjectType>jar</supportedProjectType>
+                    </supportedProjectTypes>
+                    <instructions>
+                        <Bundle-SymbolicName>
+                            ${project.artifactId}
+                        </Bundle-SymbolicName>
+                        <Export-Package>
+                            com/andrelanouette/solr4j/distrib/solr-${solr.version}
+                        </Export-Package>
+                    </instructions>
+                </configuration>
+            </plugin>
+            <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
+                <version>3.0.2</version>
                 <configuration>
+                    <archive>
+                        <manifestFile>${project.build.outputDirectory}/META-INF/MANIFEST.MF</manifestFile>
+                    </archive>
                     <excludes>
                         <exclude>com/andrelanouette/solr4j/distrib/solr-${solr.version}/example/**</exclude>
                         <exclude>com/andrelanouette/solr4j/distrib/solr-${solr.version}/example</exclude>

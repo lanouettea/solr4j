@@ -1,3 +1,21 @@
+/*
+ * #%L
+ * Solr4J
+ * %%
+ * Copyright (C) 2017 André Lanouette
+ * %%
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * #L%
+ */
+
 package com.andrelanouette.solr4j;
 
 import com.andrelanouette.exec.ManagedProcess;
@@ -127,6 +145,10 @@ public class Solr4J {
     }
 
     public synchronized void unpackConfigSet(String configSetName, boolean overwrite) {
+        unpackConfigSet(configSetName, overwrite, null);
+    }
+
+    public synchronized void unpackConfigSet(String configSetName, boolean overwrite, Class referenceClass) {
         StringBuilder configSetNameClassPathLocation = new StringBuilder();
         configSetNameClassPathLocation.append(getClass().getPackage().getName().replace(".", "/"));
         configSetNameClassPathLocation.append("/").append("configset/").append(configSetName);
@@ -141,7 +163,7 @@ public class Solr4J {
                     throw new RuntimeException("A Solr configset with the same name already exists.");
                 }
             }
-            Util.extractFromClasspathToFile(configSetNameClassPathLocation.toString(), configSetsDir);
+            Util.extractFromClasspathToFile(configSetNameClassPathLocation.toString(), configSetsDir, referenceClass);
         } catch (IOException e) {
             throw new RuntimeException(String.format("Error unpacking the configset %s", configSetName), e);
         }
@@ -168,13 +190,21 @@ public class Solr4J {
      * on the configuration.
      */
     protected void unpackEmbeddedSolrServer() {
+        unpackEmbeddedSolrServer(null);
+    }
+
+    /**
+     * Based on the current OS, unpacks the appropriate version of Solr to the file system based
+     * on the configuration.
+     */
+    protected void unpackEmbeddedSolrServer(Class referenceClass) {
         if (configuration.getBinariesClasspathLocation() == null) {
             logger.info("Not unpacking any embedded Solr Server (as BinariesClasspathLocation configuration is null)");
             return;
         }
 
         try {
-            Util.extractFromClasspathToFile(configuration.getBinariesClasspathLocation(), baseDir);
+            Util.extractFromClasspathToFile(configuration.getBinariesClasspathLocation(), baseDir, referenceClass);
             if (!SystemUtils.IS_OS_WINDOWS) {
                 Util.forceExecutable(newExecutableFile("bin", "post"));
                 Util.forceExecutable(newExecutableFile("bin", "solr"));

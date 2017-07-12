@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    
+    <parent>
+        <artifactId>solr4j-pom</artifactId>
+        <groupId>com.andrelanouette.solr4j</groupId>
+        <version>1.0.0-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>solr4j-all</artifactId>
+    <version>1.0.0-SNAPSHOT</version>
+    <packaging>bundle</packaging>
+
+    <name>Solr4J (all-in-one artifact)</name>
+
+    <properties>
+        <solr4j-distrib.version>6.6.0</solr4j-distrib.version>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>solr4j-core</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.andrelanouette.solr4j</groupId>
+            <artifactId>solr4j-distrib</artifactId>
+            <version>${solr4j-distrib.version}</version>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+
+            <!--<plugin>-->
+                <!--<groupId>org.apache.maven.plugins</groupId>-->
+                <!--<artifactId>maven-dependency-plugin</artifactId>-->
+                <!--<version>3.0.1</version>-->
+                <!--<executions>-->
+                    <!--<execution>-->
+                        <!--<id>unpack</id>-->
+                        <!--<phase>prepare-package</phase>-->
+                        <!--<goals>-->
+                            <!--<goal>unpack</goal>-->
+                        <!--</goals>-->
+                        <!--<configuration>-->
+                            <!--<artifactItems>-->
+                                <!--<artifactItem>-->
+                                    <!--<groupId>${project.groupId}</groupId>-->
+                                    <!--<artifactId>solr4j-core</artifactId>-->
+                                    <!--<version>${project.version}</version>-->
+                                    <!--<overWrite>true</overWrite>-->
+                                    <!--<outputDirectory>${project.build.directory}/core-bundle-unpacked-files</outputDirectory>-->
+                                    <!--<includes>META-INF/MANIFEST.MF</includes>-->
+                                <!--</artifactItem>-->
+                            <!--</artifactItems>-->
+                        <!--</configuration>-->
+                    <!--</execution>-->
+                <!--</executions>-->
+            <!--</plugin>-->
+            <plugin>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-bundle-plugin</artifactId>
+                <version>3.0.0</version>
+                <extensions>true</extensions>
+                <executions>
+                    <execution>
+                        <id>bundle-manifest</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>bundle</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <instructions>
+                        <Bundle-SymbolicName>
+                            ${project.artifactId}
+                        </Bundle-SymbolicName>
+                        <Export-Package>
+                            com.andrelanouette.solr4j,
+                            com.andrelanouette.exec
+                        </Export-Package>
+                        <Import-Package>
+                            *
+                        </Import-Package>
+                        <Embed-Dependency>solr4j-core;solr4j-distrib;inline=true</Embed-Dependency>
+                    </instructions>
+                </configuration>
+            </plugin>
+            
+            <!--<plugin>-->
+                <!--<groupId>org.apache.maven.plugins</groupId>-->
+                <!--<artifactId>maven-shade-plugin</artifactId>-->
+                <!--<version>3.0.0</version>-->
+                <!--<executions>-->
+                    <!--<execution>-->
+                        <!--<phase>package</phase>-->
+                        <!--<goals>-->
+                            <!--<goal>shade</goal>-->
+                        <!--</goals>-->
+                        <!--<configuration>-->
+                            <!--<artifactSet>-->
+                                <!--<includes>-->
+                                    <!--<include>com.andrelanouette.solr4j:*</include>-->
+                                <!--</includes>-->
+                            <!--</artifactSet>-->
+                            <!--<transformers>-->
+                                <!--&lt;!&ndash; Add a transformer to exclude any other manifest files (possibly from dependencies) &ndash;&gt;-->
+                                <!--<transformer implementation="org.apache.maven.plugins.shade.resource.DontIncludeResourceTransformer">-->
+                                    <!--<resource>MANIFEST.MF</resource>-->
+                                <!--</transformer>-->
+
+                                <!--&lt;!&ndash; Add a transformer to include your custom manifest file &ndash;&gt;-->
+                                <!--<transformer implementation="org.apache.maven.plugins.shade.resource.IncludeResourceTransformer">-->
+                                    <!--<resource>META-INF/MANIFEST.MF</resource>-->
+                                    <!--<file>${project.build.directory}/core-bundle-unpacked-files/META-INF/MANIFEST.MF</file>-->
+                                <!--</transformer>-->
+                            <!--</transformers>-->
+                        <!--</configuration>-->
+                    <!--</execution>-->
+                <!--</executions>-->
+            <!--</plugin>-->
+        </plugins>
+    </build>
+
+</project>

@@ -1,15 +1,13 @@
 /*
  * #%L
- * MariaDB4j
+ * Solr4J
  * %%
- * Copyright (C) 2012 - 2014 Michael Vorburger
+ * Copyright (C) 2017 André Lanouette
  * %%
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,10 +15,13 @@
  * limitations under the License.
  * #L%
  */
+
 package com.andrelanouette.solr4j;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.SystemUtils;
+import org.osgi.framework.Bundle;
+import org.osgi.framework.FrameworkUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.io.Resource;
@@ -30,6 +31,7 @@ import org.springframework.core.io.support.ResourcePatternResolver;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
+import java.util.Enumeration;
 
 /**
  * File utilities.
@@ -37,8 +39,8 @@ import java.net.URL;
  * @author Michael Vorburger
  * @author Michael Seaton
  * @author André Lanouette
- *
- * Inspired by MariaDB4J project at https://github.com/vorburger/MariaDB4j
+ *         <p>
+ *         Inspired by MariaDB4J project at https://github.com/vorburger/MariaDB4j
  */
 public class Util {
 
@@ -114,7 +116,24 @@ public class Util {
      * @throws IOException if something goes wrong, including if nothing was found on
      *                     classpath
      */
-    public static int extractFromClasspathToFile(String packagePath, File toDir) throws IOException {
+    public static int extractFromClasspathToFile(String packagePath, File toDir, Class referenceClass) throws IOException {
+        if (isOsgi()) {
+            return extractFromClasspathToFileOsgi(packagePath, toDir, referenceClass);
+        } else {
+            return extractFromClasspathToFileStandard(packagePath, toDir);
+        }
+    }
+
+    /**
+     * Extract files from a package on the classpath into a directory.
+     *
+     * @param packagePath e.g. "com/stuff" (always forward slash not backslash, never dot)
+     * @param toDir       directory to extract to
+     * @return int the number of files copied
+     * @throws IOException if something goes wrong, including if nothing was found on
+     *                     classpath
+     */
+    private static int extractFromClasspathToFileStandard(String packagePath, File toDir) throws IOException {
         String locationPattern = "classpath*:" + packagePath + "/**";
         ResourcePatternResolver resourcePatternResolver = new PathMatchingResourcePatternResolver();
         Resource[] resources = resourcePatternResolver.getResources(locationPattern);
@@ -151,6 +170,59 @@ public class Util {
         return counter;
     }
 
+    /**
+     * Extract files from a package on the classpath into a directory.
+     *
+     * @param packagePath e.g. "com/stuff" (always forward slash not backslash, never dot)
+     * @param toDir       directory to extract to
+     * @throws java.io.IOException if something goes wrong, including if nothing was found on
+     *                             classpath
+     */
+    private static int extractFromClasspathToFileOsgi(String packagePath, File toDir, Class referenceClass) throws IOException {
+        if (referenceClass == null){
+            referenceClass = Util.class;
+        }
+
+        Enumeration<URL> entries = FrameworkUtil.getBundle(referenceClass).findEntries(packagePath, "**", true);
+        int counter = 0;
+
+        while (entries.hasMoreElements()) {
+            URL url = entries.nextElement();
+            String resourcePath = url.getPath();
+
+            String path = url.toString();
+            if (!path.endsWith("/")) { // Skip directories
+                int p = path.lastIndexOf(packagePath) + packagePath.length();
+                path = path.substring(p);
+                final File targetFile = new File(toDir, path);
+                long len = 0;             // TODO use the resource size
+                if (!targetFile.exists() || targetFile.length() != len) { // Only copy new files
+                    FileUtils.copyInputStreamToFile(getClassLoader(referenceClass).getResourceAsStream(resourcePath), targetFile);
+                    counter++;
+                }
+            }
+        }
+
+        if (counter > 0) {
+            Object[] info = new Object[]{counter, packagePath, toDir};
+            logger.info("Unpacked {} files from {} to {}", info);
+        }
+        return counter;
+    }
+
+    public static ClassLoader getClassLoader(Class referenceClass) {
+        return referenceClass.getClassLoader();
+    }
+
+    private static boolean isOsgi() {
+        try {
+            Bundle bundle = FrameworkUtil.getBundle(Util.class);
+            return bundle != null;
+        } catch (NoClassDefFoundError ex) {
+            return false;
+        }
+    }
+
     @SuppressWarnings("null")
     private static void tryN(int n, long msToWait, Procedure<IOException> procedure) throws IOException {
         IOException lastIOException = null;
@@ -172,8 +244,8 @@ public class Util {
         }
     }
 
-    private static interface Procedure<E extends Throwable> {
+private static interface Procedure<E extends Throwable> {
 
-        void apply() throws E;
-    }
+    void apply() throws E;
+}
 }
