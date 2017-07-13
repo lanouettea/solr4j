@@ -57,7 +57,7 @@ public class Solr4JApplication {
 //            }
 //        });
 
-        solr4J.start();
+        solr4J.start(true);
         solr4J.unpackConfigSet("test_configset", true);
 
         while (true) {

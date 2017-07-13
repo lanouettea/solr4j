@@ -27,8 +27,8 @@ import org.apache.commons.lang3.SystemUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
+import java.util.regex.Pattern;
 
 /**
  * //TODO: Document this class; Solr4j
@@ -39,7 +39,10 @@ import java.io.IOException;
 public class Solr4J {
     //region  CONSTANTS DECLARATIONS
 
-    private static final Logger logger = LoggerFactory.getLogger(Solr4J.class);
+    private final Logger logger;
+
+    private final String FOUND_PROCESS_REGEXP_FORMAT = ".*Found Solr process \\d+ running on port %d.*";
+    private static final String SOLR_VERSION_FILE = ".solr-version";
 
     //endregion
 
@@ -49,43 +52,86 @@ public class Solr4J {
 
     private File baseDir;
 
-    private ManagedProcess solrProcess;
-
     protected int solrStartMaxWaitTimeMs = 30000;
+    private ManagedProcess stopProcess;
 
     //endregion
 
     //region CONSTRUCTORS
-
-    protected Solr4J(Solr4JConfiguration configuration) {
+    protected Solr4J(Solr4JConfiguration configuration, Logger logger) {
+        if (logger == null) {
+            logger = LoggerFactory.getLogger(Solr4J.class);
+        }
+        this.logger = logger;
         this.configuration = configuration;
     }
 
-    public static Solr4J newEmbeddedSolr4J(Solr4JConfiguration solr4JConfiguration) throws ManagedProcessException {
-        Solr4J solr4J = new Solr4J(solr4JConfiguration);
+    public static Solr4J newEmbeddedSolr4J(Solr4JConfiguration solr4JConfiguration, Logger logger) throws ManagedProcessException {
+        Solr4J solr4J = new Solr4J(solr4JConfiguration, logger);
         solr4J.prepareDirectories();
         solr4J.unpackEmbeddedSolrServer();
         return solr4J;
     }
 
-    public static Solr4J newEmbeddedSolr4J(int port) throws ManagedProcessException {
+
+    public static Solr4J newEmbeddedSolr4J(int port, Logger logger) throws ManagedProcessException {
         Solr4JConfigurationBuilder solr4JConfigurationBuilder = Solr4JConfigurationBuilder.newBuilder();
         solr4JConfigurationBuilder.setPort(port);
-        return newEmbeddedSolr4J(solr4JConfigurationBuilder.build());
+        return newEmbeddedSolr4J(solr4JConfigurationBuilder.build(), logger);
+    }
+
+    public static Solr4J newEmbeddedSolr4J(Solr4JConfiguration solr4JConfiguration) throws ManagedProcessException {
+        return newEmbeddedSolr4J(solr4JConfiguration, null);
+    }
+
+    public static Solr4J newEmbeddedSolr4J(int port) throws ManagedProcessException {
+        return newEmbeddedSolr4J(port, null);
     }
 
     //endregion
 
     //region BASE METHODS
 
+    public synchronized boolean isAlreadyRunning() throws ManagedProcessException {
+        File executable = newExecutableFile("bin", "solr");
+        if (!executable.exists()) {     // Prevent filenotfound when checking if running before unpacking the distribution.
+            return false;
+        }
+        ManagedProcessBuilder builder = new ManagedProcessBuilder(executable);
+        builder.setOutputStreamLogDispatcher(getOutputStreamLogDispatcher("solr"));
+        builder.setDestroyOnShutdown(false);
+        builder.addArgument("status");
+
+        ManagedProcess statusProcess = builder.build();
+
+        statusProcess.start();
+        statusProcess.waitForExit();
+
+        String console = statusProcess.getConsole();
+        return Pattern.compile(String.format(FOUND_PROCESS_REGEXP_FORMAT, configuration.getPort())).matcher(console).find();
+    }
+
+
     /**
      * Starts up the Solr server, using the base directory and port specified in the configuration.
      *
      * @throws ManagedProcessException if something fatal went wrong
      */
-    public synchronized void start() throws ManagedProcessException {
+    public synchronized void start(boolean restartIfAlreadyRunning) throws ManagedProcessException {
         logger.info("Starting up the Solr server...");
+
+        boolean isAlreadyRunning = isAlreadyRunning();
+
+        if (isAlreadyRunning) {
+            if (restartIfAlreadyRunning) {
+                stop();
+            } else {
+                throw new ManagedProcessException(String.format("Solr was already running on port %d", configuration.getPort()));
+            }
+        }
+
         boolean ready = false;
+        ManagedProcess solrProcess;
         try {
             solrProcess = startPreparation();
             ready = solrProcess.startAndWaitForConsoleMessageMaxMs(getReadyForConnectionsTag(), solrStartMaxWaitTimeMs);
@@ -94,10 +140,8 @@ public class Solr4J {
             throw new ManagedProcessException("An error occurred while starting the Solr server", e);
         }
         if (!ready) {
-            if (solrProcess.isAlive())
-                solrProcess.destroy();
             throw new ManagedProcessException("Solr server does not seem to have started up correctly? Magic string not seen in "
-                    + solrStartMaxWaitTimeMs + "ms: " + getReadyForConnectionsTag() + solrProcess.getLastConsoleLines());
+                    + solrStartMaxWaitTimeMs + "ms: " + getReadyForConnectionsTag());
         }
         logger.info("Solr server startup complete.");
     }
@@ -135,12 +179,48 @@ public class Solr4J {
      * @throws ManagedProcessException if something fatal went wrong
      */
     public synchronized void stop() throws ManagedProcessException {
-        if (solrProcess.isAlive()) {
+        if (isAlreadyRunning() && (stopProcess == null || !stopProcess.isAlive())) {
             logger.debug("Stopping the Solr server...");
-            solrProcess.destroy();
-            logger.info("Solr server stopped.");
+            ManagedProcessBuilder stopProcessBuilder = getSolrManagedProcessBuilder();
+            stopProcessBuilder.addArgument("stop");
+            stopProcessBuilder.addArgument("-p").addArgument(Integer.toString(configuration.getPort()));
+            stopProcessBuilder.setDestroyOnShutdown(false);
+            stopProcess = stopProcessBuilder.build();
+            stopProcess.start();
+            stopProcess.waitForExit();
+
+            if (isAlreadyRunning()) {
+                logger.error("Solr server did not stop as expected. It was still running after calling the stop process.");
+            } else {
+                logger.info("Solr server stopped.");
+            }
         } else {
             logger.debug("Solr server was already stopped.");
+        }
+    }
+
+    public synchronized void unpackCoreFromClasspath(String coreName, boolean overwrite) {
+        unpackCoreFromClasspath(coreName, overwrite, null);
+    }
+
+    public synchronized void unpackCoreFromClasspath(String coreName, boolean overwrite, Class referenceClass) {
+        StringBuilder configSetNameClassPathLocation = new StringBuilder();
+        configSetNameClassPathLocation.append(getClass().getPackage().getName().replace(".", "/"));
+        configSetNameClassPathLocation.append("/").append("core/").append(coreName);
+
+        File coreDir = new File(String.format("%s/server/solr/%s", configuration.getBaseDir(), coreName));
+
+        try {
+            if (coreDir.exists()) {
+                if (overwrite) {
+                    FileUtils.deleteDirectory(coreDir);
+                } else {
+                    throw new RuntimeException("A Solr core with the same name already exists.");
+                }
+            }
+            Util.extractFromClasspathToFile(configSetNameClassPathLocation.toString(), coreDir, referenceClass);
+        } catch (IOException e) {
+            throw new RuntimeException(String.format("Error unpacking the core %s from the classpath", coreName), e);
         }
     }
 
@@ -172,6 +252,7 @@ public class Solr4J {
     private ManagedProcessBuilder getSolrManagedProcessBuilder() throws ManagedProcessException {
         ManagedProcessBuilder builder = new ManagedProcessBuilder(newExecutableFile("bin", "solr"));
         builder.setOutputStreamLogDispatcher(getOutputStreamLogDispatcher("solr"));
+        builder.setLogger(this.logger);
         return builder;
     }
 
@@ -189,7 +270,7 @@ public class Solr4J {
      * Based on the current OS, unpacks the appropriate version of Solr to the file system based
      * on the configuration.
      */
-    protected void unpackEmbeddedSolrServer() {
+    protected void unpackEmbeddedSolrServer() throws ManagedProcessException {
         unpackEmbeddedSolrServer(null);
     }
 
@@ -197,10 +278,32 @@ public class Solr4J {
      * Based on the current OS, unpacks the appropriate version of Solr to the file system based
      * on the configuration.
      */
-    protected void unpackEmbeddedSolrServer(Class referenceClass) {
+    protected void unpackEmbeddedSolrServer(Class referenceClass) throws ManagedProcessException {
         if (configuration.getBinariesClasspathLocation() == null) {
             logger.info("Not unpacking any embedded Solr Server (as BinariesClasspathLocation configuration is null)");
             return;
+        }
+
+        File solrVersionFile = new File(String.format("%s/%s", configuration.getBaseDir(), SOLR_VERSION_FILE));
+        String currentVersion = null;
+        if (solrVersionFile.exists()) {
+            try(BufferedReader solrVersionReader = new BufferedReader(new FileReader(solrVersionFile))) {
+                currentVersion = solrVersionReader.readLine().trim();
+            } catch (IOException e) {
+               logger.error("Error while attempting to read the Solr version from the version file");
+            }
+        }
+
+        if (currentVersion != null && currentVersion.equals(configuration.getSolrVersion()) && !configuration.isUnpackForceOverwrite()){
+            logger.info("Will not unpack Solr version {} from classpath into {} as it is already at this version", configuration.getSolrVersion(), configuration.getBaseDir());
+            return;
+        }
+
+        logger.info("Will unpack Solr version {} from classpath into {}...", configuration.getSolrVersion(), configuration.getBaseDir());
+
+        if (isAlreadyRunning()) {
+            logger.info("Solr was already running when attempting to unpack. Stopping Solr first...");
+            stop();
         }
 
         try {
@@ -233,7 +336,7 @@ public class Solr4J {
                 // than sorry and do it again ourselves here as well.
                 try {
                     // Shut up and don't log if it was already stop() before
-                    if (solrProcess != null && solrProcess.isAlive()) {
+                    if (isAlreadyRunning()) {
                         logger.info("cleanupOnExit() ShutdownHook now stopping Solr server");
                         solr4j.stop();
                     }
@@ -278,6 +381,7 @@ public class Solr4J {
     public Solr4JConfiguration getConfiguration() {
         return configuration;
     }
+
 
     //endregion
 }

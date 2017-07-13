@@ -39,6 +39,7 @@ public class Solr4JConfigurationBuilder {
     protected int port = 8983;
     protected String solrVerion = "6.6.0";
     protected boolean isUnpackingFromClasspath = true;
+    protected boolean isUnpackForceOverwrite = false;
     protected String javaHome = null;
     protected Integer memory = null;
     protected String args = null;
@@ -60,7 +61,7 @@ public class Solr4JConfigurationBuilder {
     }
 
     public Solr4JConfiguration build() {
-        return new Solr4JConfiguration.Impl(this.port, this.baseDir, this.solrVerion, this.isUnpackingFromClasspath, _getBinariesClassPathLocation(), _getJavaHome(), this.memory, this.args);
+        return new Solr4JConfiguration.Impl(this.port, this.baseDir, this.solrVerion, this.isUnpackingFromClasspath, this.isUnpackForceOverwrite, _getBinariesClassPathLocation(), _getJavaHome(), this.memory, this.args);
     }
 
     //endregion
@@ -81,10 +82,10 @@ public class Solr4JConfigurationBuilder {
             return null;
     }
 
-    protected String _getJavaHome(){
-        if (javaHome != null){
+    protected String _getJavaHome() {
+        if (javaHome != null) {
             return javaHome;
-        }else{
+        } else {
             return System.getProperty("java.home");
         }
     }
@@ -116,8 +117,13 @@ public class Solr4JConfigurationBuilder {
         return this;
     }
 
-    public Solr4JConfigurationBuilder setUnpackFromClassPath(boolean unpackingFromClasspath){
+    public Solr4JConfigurationBuilder setUnpackFromClassPath(boolean unpackingFromClasspath) {
         this.isUnpackingFromClasspath = unpackingFromClasspath;
+        return this;
+    }
+
+    public Solr4JConfigurationBuilder setUnpackForceOverwrite(boolean unpackForceOverwrite) {
+        this.isUnpackForceOverwrite = unpackForceOverwrite;
         return this;
     }
 

@@ -20,6 +20,7 @@ package com.andrelanouette.exec;
 import org.apache.commons.exec.CommandLine;
 import org.apache.commons.exec.environment.EnvironmentUtils;
 import org.apache.commons.exec.util.StringUtils;
+import org.slf4j.Logger;
 
 import java.io.File;
 import java.io.IOException;
@@ -53,6 +54,7 @@ public class ManagedProcessBuilder {
     protected boolean destroyOnShutdown = true;
     protected int consoleBufferMaxLines = 100;
     protected OutputStreamLogDispatcher outputStreamLogDispatcher = new OutputStreamLogDispatcher();
+    protected Logger logger;
 
     public ManagedProcessBuilder(String executable) throws ManagedProcessException {
         commonsExecCommandLine = new CommandLine(executable);
@@ -190,6 +192,14 @@ public class ManagedProcessBuilder {
         this.outputStreamLogDispatcher = outputStreamLogDispatcher;
     }
 
+    public Logger getLogger() {
+        return logger;
+    }
+
+    public void setLogger(Logger logger) {
+        this.logger = logger;
+    }
+
     public OutputStreamLogDispatcher getOutputStreamLogDispatcher() {
         return outputStreamLogDispatcher;
     }
@@ -197,7 +207,7 @@ public class ManagedProcessBuilder {
     // ----
 
     public ManagedProcess build() {
-        return new ManagedProcess(getCommandLine(), directory, environment, inputStream, destroyOnShutdown, consoleBufferMaxLines,
+        return new ManagedProcess(logger, getCommandLine(), directory, environment, inputStream, destroyOnShutdown, consoleBufferMaxLines,
                 outputStreamLogDispatcher);
     }
 

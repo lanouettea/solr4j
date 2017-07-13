@@ -179,7 +179,7 @@ public class Util {
      *                             classpath
      */
     private static int extractFromClasspathToFileOsgi(String packagePath, File toDir, Class referenceClass) throws IOException {
-        if (referenceClass == null){
+        if (referenceClass == null) {
             referenceClass = Util.class;
         }
 
@@ -244,8 +244,8 @@ public class Util {
         }
     }
 
-private static interface Procedure<E extends Throwable> {
+    private static interface Procedure<E extends Throwable> {
 
-    void apply() throws E;
-}
+        void apply() throws E;
+    }
 }

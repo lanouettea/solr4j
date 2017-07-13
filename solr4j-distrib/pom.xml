@@ -16,9 +16,19 @@
     <properties>
         <solr.version>6.6.0</solr.version>
         <solr.checksum>ff41310a86a0ffa00a8c8f17c65eb457</solr.checksum>
+        <solr-distribution-package>com/andrelanouette/solr4j/distrib/solr-${solr.version}</solr-distribution-package>
     </properties>
 
+
+
     <build>
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>true</filtering>
+                <targetPath>${project.build.directory}/classes/${solr-distribution-package}</targetPath>
+            </resource>
+        </resources>
         <plugins>
             <plugin>
                 <groupId>com.googlecode.maven-download-plugin</groupId>
@@ -62,7 +72,7 @@
                             ${project.artifactId}
                         </Bundle-SymbolicName>
                         <Export-Package>
-                            com/andrelanouette/solr4j/distrib/solr-${solr.version}
+                            ${solr-distribution-package}
                         </Export-Package>
                     </instructions>
                 </configuration>
@@ -76,8 +86,8 @@
                         <manifestFile>${project.build.outputDirectory}/META-INF/MANIFEST.MF</manifestFile>
                     </archive>
                     <excludes>
-                        <exclude>com/andrelanouette/solr4j/distrib/solr-${solr.version}/example/**</exclude>
-                        <exclude>com/andrelanouette/solr4j/distrib/solr-${solr.version}/example</exclude>
+                        <exclude>${solr-distribution-package}/example/**</exclude>
+                        <exclude>${solr-distribution-package}/example</exclude>
                     </excludes>
                 </configuration>
             </plugin>

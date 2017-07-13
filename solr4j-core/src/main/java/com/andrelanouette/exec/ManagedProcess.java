@@ -50,14 +50,14 @@ import static com.andrelanouette.exec.OutputStreamType.STDOUT;
  */
 public class ManagedProcess {
 
-    private static final Logger logger = LoggerFactory.getLogger(ManagedProcess.class);
+    private final  Logger logger;
     private static final int INVALID_EXITVALUE = Executor.INVALID_EXITVALUE;
 
     private final CommandLine commandLine;
     private final Executor executor = new DefaultExecutor();
     private final DefaultExecuteResultHandler resultHandler = new LoggingExecuteResultHandler();
     private final ExecuteWatchdog watchDog = new ExecuteWatchdog(ExecuteWatchdog.INFINITE_TIMEOUT);
-    private final ProcessDestroyer shutdownHookProcessDestroyer = new LoggingShutdownHookProcessDestroyer();
+    private final ProcessDestroyer shutdownHookProcessDestroyer;
     private final Map<String, String> environment;
     private final InputStream input;
     private final boolean destroyOnShutdown;
@@ -81,8 +81,13 @@ public class ManagedProcess {
      * @param directory Working directory, or null
      * @param environment Environment Variable.
      */
-    ManagedProcess(CommandLine commandLine, File directory, Map<String, String> environment,
+    ManagedProcess(Logger logger, CommandLine commandLine, File directory, Map<String, String> environment,
             InputStream input, boolean destroyOnShutdown, int consoleBufferMaxLines, OutputStreamLogDispatcher outputStreamLogDispatcher) {
+        if (logger == null){
+            logger = LoggerFactory.getLogger(ManagedProcess.class);
+        }
+        this.logger = logger;
+        this.shutdownHookProcessDestroyer = new LoggingShutdownHookProcessDestroyer(this.logger);
         this.commandLine = commandLine;
         this.environment = environment;
         if (input != null) {
@@ -488,6 +493,12 @@ public class ManagedProcess {
     }
 
     public static class LoggingShutdownHookProcessDestroyer extends ShutdownHookProcessDestroyer {
+
+        private final Logger logger;
+
+        public LoggingShutdownHookProcessDestroyer(Logger logger) {
+            this.logger = logger;
+        }
 
         @Override
         public void run() {

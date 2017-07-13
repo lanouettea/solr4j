@@ -34,6 +34,8 @@ public interface Solr4JConfiguration {
 
     boolean isUnpackFromClasspath();
 
+    boolean isUnpackForceOverwrite();
+
     String getBinariesClasspathLocation();
 
     String getJavaHome();
@@ -47,16 +49,18 @@ public interface Solr4JConfiguration {
         private final String baseDir;
         private final String solrVersion;
         private final boolean unpackFromClasspath;
+        private final boolean unpackForceOverwrite;
         private final String binariesClasspathLocation;
         private final String javaHome;
         private final Integer memory;
         private final String args;
 
-        public Impl(int port, String baseDir, String solrVersion, boolean unpackFromClasspath, String binariesClasspathLocation, String javaHome, Integer memory, String args) {
+        public Impl(int port, String baseDir, String solrVersion, boolean unpackFromClasspath, boolean unpackForceOverwrite, String binariesClasspathLocation, String javaHome, Integer memory, String args) {
             this.port = port;
             this.baseDir = baseDir;
             this.solrVersion = solrVersion;
             this.unpackFromClasspath = unpackFromClasspath;
+            this.unpackForceOverwrite = unpackForceOverwrite;
             this.binariesClasspathLocation = binariesClasspathLocation;
             this.javaHome = javaHome;
             this.memory = memory;
@@ -80,6 +84,11 @@ public interface Solr4JConfiguration {
 
         public boolean isUnpackFromClasspath() {
             return unpackFromClasspath;
+        }
+
+        @Override
+        public boolean isUnpackForceOverwrite() {
+            return unpackForceOverwrite;
         }
 
         public String getBinariesClasspathLocation() {

@@ -13,11 +13,11 @@
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
-      <module name="solr4j-all" target="1.6" />
-      <module name="solr4j-core" target="1.6" />
-      <module name="solr4j-demo" target="1.6" />
-      <module name="solr4j-distrib" target="1.6" />
-      <module name="solr4j-pom" target="1.6" />
+      <module name="solr4j-all" target="1.8" />
+      <module name="solr4j-core" target="1.8" />
+      <module name="solr4j-demo" target="1.8" />
+      <module name="solr4j-distrib" target="1.8" />
+      <module name="solr4j-pom" target="1.8" />
     </bytecodeTargetLevel>
   </component>
 </project>
