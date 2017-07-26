@@ -24,7 +24,7 @@ import com.andrelanouette.solr4j.Solr4JConfigurationBuilder;
 /**
  * //TODO: Document this class; Solr4JApplication
  *
- * @author Andre Lanouette <andre.lanouette@lrtech.ca>
+ * @author Andre Lanouette
  * @since 10/07/2017
  */
 public class Solr4JApplication {

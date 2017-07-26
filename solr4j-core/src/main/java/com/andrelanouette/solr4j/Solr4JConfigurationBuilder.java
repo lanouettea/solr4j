@@ -23,7 +23,7 @@ import org.apache.commons.lang3.SystemUtils;
 /**
  * //TODO: Document this class; Solr4JConfigurationBuilder
  *
- * @author Andre Lanouette <andre.lanouette@lrtech.ca>
+ * @author Andre Lanouette
  * @since 10/07/2017
  */
 public class Solr4JConfigurationBuilder {

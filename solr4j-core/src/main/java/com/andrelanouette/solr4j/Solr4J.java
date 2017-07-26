@@ -33,7 +33,7 @@ import java.util.regex.Pattern;
 /**
  * //TODO: Document this class; Solr4j
  *
- * @author Andre Lanouette <andre.lanouette@lrtech.ca>
+ * @author Andre Lanouette
  * @since 10/07/2017
  */
 public class Solr4J {

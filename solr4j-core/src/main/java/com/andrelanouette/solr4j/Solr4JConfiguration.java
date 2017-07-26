@@ -21,7 +21,7 @@ package com.andrelanouette.solr4j;
 /**
  * //TODO: Document this class; Solr4JConfiguration
  *
- * @author Andre Lanouette <andre.lanouette@lrtech.ca>
+ * @author Andre Lanouette
  * @since 10/07/2017
  */
 public interface Solr4JConfiguration {

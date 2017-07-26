@@ -7,12 +7,12 @@
     <parent>
         <groupId>com.andrelanouette.solr4j</groupId>
         <artifactId>solr4j-pom</artifactId>
-        <version>1.0.0-SNAPSHOT</version>
+        <version>1.0.0</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
     <artifactId>solr4j-core</artifactId>
-    <version>1.0.0-SNAPSHOT</version>
+    <version>1.0.0</version>
 
     <dependencies>
         <dependency>
