@@ -7,19 +7,19 @@
     <parent>
         <artifactId>solr4j-pom</artifactId>
         <groupId>com.andrelanouette.solr4j</groupId>
-        <version>1.0.1-SNAPSHOT</version>
+        <version>1.0.1</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
     <artifactId>solr4j-demo</artifactId>
-    <version>1.0.1-SNAPSHOT</version>
+    <version>1.0.1</version>
 
 
     <dependencies>
         <dependency>
             <groupId>com.andrelanouette.solr4j</groupId>
             <artifactId>solr4j-core</artifactId>
-            <version>1.0.1-SNAPSHOT</version>
+            <version>1.0.1</version>
         </dependency>
         <dependency>
             <groupId>com.andrelanouette.solr4j</groupId>
