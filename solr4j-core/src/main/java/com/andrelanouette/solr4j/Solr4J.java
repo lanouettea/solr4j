@@ -101,9 +101,9 @@ public class Solr4J {
         builder.setOutputStreamLogDispatcher(getOutputStreamLogDispatcher("solr"));
         builder.setDestroyOnShutdown(false);
         builder.addArgument("status");
+        builder.setExitValues(new int[]{0, 2, 3});
 
         ManagedProcess statusProcess = builder.build();
-
         statusProcess.start();
         statusProcess.waitForExit();
 

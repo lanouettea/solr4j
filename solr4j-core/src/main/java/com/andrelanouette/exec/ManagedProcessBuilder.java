@@ -54,6 +54,7 @@ public class ManagedProcessBuilder {
     protected boolean destroyOnShutdown = true;
     protected int consoleBufferMaxLines = 100;
     protected OutputStreamLogDispatcher outputStreamLogDispatcher = new OutputStreamLogDispatcher();
+    protected int[] exitValues = new int[]{1};
     protected Logger logger;
 
     public ManagedProcessBuilder(String executable) throws ManagedProcessException {
@@ -204,11 +205,18 @@ public class ManagedProcessBuilder {
         return outputStreamLogDispatcher;
     }
 
+    public int[] getExitValues() {
+        return exitValues;
+    }
+
+    public void setExitValues(int[] exitValues) {
+        this.exitValues = exitValues;
+    }
     // ----
 
     public ManagedProcess build() {
         return new ManagedProcess(logger, getCommandLine(), directory, environment, inputStream, destroyOnShutdown, consoleBufferMaxLines,
-                outputStreamLogDispatcher);
+                outputStreamLogDispatcher, exitValues);
     }
 
     public void setInputStream(InputStream inputStream) {

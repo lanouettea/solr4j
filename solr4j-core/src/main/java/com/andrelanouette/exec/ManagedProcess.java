@@ -82,13 +82,15 @@ public class ManagedProcess {
      * @param environment Environment Variable.
      */
     ManagedProcess(Logger logger, CommandLine commandLine, File directory, Map<String, String> environment,
-            InputStream input, boolean destroyOnShutdown, int consoleBufferMaxLines, OutputStreamLogDispatcher outputStreamLogDispatcher) {
+            InputStream input, boolean destroyOnShutdown, int consoleBufferMaxLines, OutputStreamLogDispatcher outputStreamLogDispatcher,
+                   int[] exitValues) {
         if (logger == null){
             logger = LoggerFactory.getLogger(ManagedProcess.class);
         }
         this.logger = logger;
         this.shutdownHookProcessDestroyer = new LoggingShutdownHookProcessDestroyer(this.logger);
         this.commandLine = commandLine;
+        this.executor.setExitValues(exitValues);
         this.environment = environment;
         if (input != null) {
             this.input = buffer(input);
