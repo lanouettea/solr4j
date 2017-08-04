@@ -7,7 +7,7 @@
     <parent>
         <groupId>com.andrelanouette.solr4j</groupId>
         <artifactId>solr4j-pom</artifactId>
-        <version>1.0.1</version>
+        <version>1.0.2-SNAPSHOT</version>
     </parent>
 
     <artifactId>solr4j-distrib</artifactId>

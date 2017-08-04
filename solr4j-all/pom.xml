@@ -7,11 +7,11 @@
     <parent>
         <artifactId>solr4j-pom</artifactId>
         <groupId>com.andrelanouette.solr4j</groupId>
-        <version>1.0.1</version>
+        <version>1.0.2-SNAPSHOT</version>
     </parent>
 
     <artifactId>solr4j-all</artifactId>
-    <version>1.0.1</version>
+    <version>1.0.2-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
     <name>Solr4J (all-in-one artifact)</name>
